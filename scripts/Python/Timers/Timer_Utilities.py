@@ -133,13 +133,15 @@ class TimerUtilities(object):
                 structureName = structureCall["Data"]["name"]
                 self.verified_owner = structureCall["Data"]["owner_id"]
 
+                return "{name}".format(
+                    name=structureName
+                )
+
             else:
 
-                raise RuntimeError("Structure Call Failed")
-
-            return "{name}".format(
-                name=structureName
-            )
+                return "Unknown Structure {id}".format(
+                    id=structureID
+                )
 
     def parseTimestamp(self, timestamp):
 

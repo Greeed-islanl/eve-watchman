@@ -2,6 +2,18 @@
 
 Changes for each version along with any requirements to update from the previous version will be listed below.
 
+## Patch Version Radar – 1 – 1 Update
+
+### Relay Script
+
+* Hardened the Timer parsing process against various errors. 
+
+### UPDATE INSTRUCTIONS (From Version Radar – 0 – *)
+
+1. Pause operation of the Relay.
+2. Sync up files with the repository.
+3. Restart operation of the Relay.
+
 ## Minor Version Radar – 1 – 0 Update
 
 ### Notification Parsing

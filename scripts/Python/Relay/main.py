@@ -187,54 +187,54 @@ def run():
                                 timerData.formatTimer()
                                 print("[{Time}] Formatting Complete.".format(Time=getTimeMark()))
 
-                                if timerData.shouldItPost():
+                                if timerData.parseFailure:
+
+                                    parseFailureNotice = "A(n) {type} notification for {corp} failed to parse when being formatted for posting to a {platform} timerboard.".format(
+                                        type=eachNotification["type"],
+                                        corp=relayCorp,
+                                        platform=timerboardtype
+                                    )
+
+                                    print(parseFailureNotice)
+
+                                    makeLogEntry(sq1Database, "Notification Parse Failure", parseFailureNotice)
+
+                                    registerNotification(sq1Database, "Timer", eachNotification["notification_id"], timerboardid, eachNotification["type"], notificationTimestamp)
+
+                                elif timerData.shouldItPost():
 
                                     print("[{Time}] Approved to post, doing so...".format(Time=getTimeMark()))
 
-                                    if timerData.parseFailure:
+                                    postData = timerData.getPostData()
 
-                                        parseFailureNotice = "A(n) {type} notification for {corp} failed to parse when being formatted for posting to a {platform} timerboard.".format(
+                                    poster = TimerTerminus(postData, timerboardtype, timerboardurl, timerboardtoken)
+                                    wasPosted = poster.post(2)
+
+                                    if wasPosted:
+
+                                        postedNotice = "A(n) {type} notification was posted for {corp} to a {platform} timerboard.".format(
                                             type=eachNotification["type"],
                                             corp=relayCorp,
                                             platform=timerboardtype
                                         )
 
-                                        print(parseFailureNotice)
+                                        print(postedNotice)
 
-                                        makeLogEntry(sq1Database, "Notification Parse Failure", parseFailureNotice)
+                                        makeLogEntry(sq1Database, "Timer Created", postedNotice)
+
+                                        time.sleep(1)
 
                                     else:
 
-                                        postData = timerData.getPostData()
+                                        failureNotice = "A(n) {type} notification failed to post for {corp} to a {platform} timerboard.".format(
+                                            type=eachNotification["type"],
+                                            corp=relayCorp,
+                                            platform=timerboardtype
+                                        )
 
-                                        poster = TimerTerminus(postData, timerboardtype, timerboardurl, timerboardtoken)
-                                        wasPosted = poster.post(2)
+                                        print(failureNotice)
 
-                                        if wasPosted:
-
-                                            postedNotice = "A(n) {type} notification was posted for {corp} to a {platform} timerboard.".format(
-                                                type=eachNotification["type"],
-                                                corp=relayCorp,
-                                                platform=timerboardtype
-                                            )
-
-                                            print(postedNotice)
-
-                                            makeLogEntry(sq1Database, "Timer Created", postedNotice)
-
-                                            time.sleep(1)
-
-                                        else:
-
-                                            failureNotice = "A(n) {type} notification failed to post for {corp} to a {platform} timerboard.".format(
-                                                type=eachNotification["type"],
-                                                corp=relayCorp,
-                                                platform=timerboardtype
-                                            )
-
-                                            print(failureNotice)
-
-                                            makeLogEntry(sq1Database, "Unknown Relay Error", failureNotice)
+                                        makeLogEntry(sq1Database, "Unknown Relay Error", failureNotice)
 
                                     registerNotification(sq1Database, "Timer", eachNotification["notification_id"], timerboardid, eachNotification["type"], notificationTimestamp)
 

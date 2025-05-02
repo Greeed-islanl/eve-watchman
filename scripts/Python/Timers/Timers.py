@@ -25,6 +25,7 @@ class Timers(TimerUtilities, TimerRegister, TimerFormatter):
         self.type = incoming_type
         self.data = yaml.load(incoming_text, Loader=yaml.SafeLoader)
         self.platform = timerboard_type
+        self.timer = 0
 
         self.timer_owner = relay_for_id
         self.verified_owner = None
