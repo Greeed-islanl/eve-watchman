@@ -1,5 +1,5 @@
 import ESI
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 class NotificationUtilities(object):
 
@@ -451,4 +451,4 @@ class NotificationUtilities(object):
 
             unixTime = int(timestamp)
 
-        return datetime.fromtimestamp(unixTime, UTC).strftime("%d %B, %Y - %H:%M:%S EVE")
+        return datetime.fromtimestamp(unixTime, timezone.utc).strftime("%d %B, %Y - %H:%M:%S EVE")
