@@ -1,0 +1,99 @@
+services:
+  # MySQL Database
+  database:
+    image: mysql:8.0
+    container_name: eve-watchman-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-eve_watchman}
+      MYSQL_USER: ${DB_USER:-watchman}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-watchmanpass}
+      # Use legacy authentication for compatibility with PDO
+      MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - eve-watchman-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web Application (Apache + PHP)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: eve-watchman-web
+    environment:
+      # Database Configuration
+      ENV_WATCHMAN_DATABASE_SERVER: database
+      ENV_WATCHMAN_DATABASE_PORT: 3306
+      ENV_WATCHMAN_DATABASE_USERNAME: ${DB_USER:-watchman}
+      ENV_WATCHMAN_DATABASE_PASSWORD: ${DB_PASSWORD:-watchmanpass}
+      ENV_WATCHMAN_DATABASE_NAME: ${DB_NAME:-eve_watchman}
+      
+      # Eve Authentication
+      ENV_WATCHMAN_EVE_CLIENT_ID: ${EVE_CLIENT_ID}
+      ENV_WATCHMAN_EVE_CLIENT_SECRET: ${EVE_CLIENT_SECRET}
+      ENV_WATCHMAN_EVE_CLIENT_REDIRECT: ${EVE_CLIENT_REDIRECT}
+      ENV_WATCHMAN_EVE_SUPER_ADMINS: ${EVE_SUPER_ADMINS}
+      
+      # Website Configuration
+      ENV_WATCHMAN_WEBSITE_SESSION_TIME: ${SESSION_TIME:-43200}
+      ENV_WATCHMAN_WEBSITE_STORE_IPS: ${STORE_IPS:-0}
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - ./config:/var/www/html/config
+      - ./src:/var/www/html/src
+      - ./public:/var/www/html/public
+    networks:
+      - eve-watchman-network
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Python Relay Service
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile.relay
+    container_name: eve-watchman-relay
+    environment:
+      # Database Configuration
+      ENV_WATCHMAN_DATABASE_SERVER: database
+      ENV_WATCHMAN_DATABASE_PORT: 3306
+      ENV_WATCHMAN_DATABASE_USERNAME: ${DB_USER:-watchman}
+      ENV_WATCHMAN_DATABASE_PASSWORD: ${DB_PASSWORD:-watchmanpass}
+      ENV_WATCHMAN_DATABASE_NAME: ${DB_NAME:-eve_watchman}
+      
+      # Eve Authentication (required for relay)
+      ENV_WATCHMAN_EVE_CLIENT_ID: ${EVE_CLIENT_ID}
+      ENV_WATCHMAN_EVE_CLIENT_SECRET: ${EVE_CLIENT_SECRET}
+      ENV_WATCHMAN_EVE_SUPER_ADMINS: ${EVE_SUPER_ADMINS}
+      
+      # Timerboards (optional)
+      ENV_WATCHMAN_TIMERBOARDS_ENABLED: ${TIMERBOARDS_ENABLED:-0}
+    volumes:
+      - ./config:/app/config
+      - ./scripts/Python:/app/scripts/Python
+    networks:
+      - eve-watchman-network
+    depends_on:
+      database:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
+
+networks:
+  eve-watchman-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
