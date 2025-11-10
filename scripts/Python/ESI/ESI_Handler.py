@@ -1,6 +1,6 @@
-from ESI import ESI_Method_Register
+from .ESI_Method_Register import MethodRegister
 
-class Handler(ESI_Method_Register.MethodRegister):
+class Handler(MethodRegister):
 
     def __init__(self, databaseConnection, accessToken = None):
     
@@ -20,7 +20,7 @@ class Handler(ESI_Method_Register.MethodRegister):
             method = getattr(self, self.methodList[endpoint]["Name"])
             
             if (
-                all(args in arguments for args in self.methodList[endpoint]["Required Arguments"])
+                all(arg in arguments for arg in self.methodList[endpoint]["Required Arguments"])
             ):
             
                 return method(arguments)
@@ -32,4 +32,3 @@ class Handler(ESI_Method_Register.MethodRegister):
         else:
         
             raise NameError("The " + endpoint + " endpoint does not have a valid registered method.")
-    
