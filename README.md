@@ -6,6 +6,22 @@ This Branch is a rewrite of the application using a new custom framework. **Vers
 
 **Current Version: Radar – 1 – 1**
 
+## Quick Deployment
+
+For quick deployment using Docker, see the **[Deployment Guide](DEPLOYMENT.md)**.
+
+The Docker-based deployment includes:
+- Web application (Apache + PHP 8.2)
+- Python relay service (runs every 60 seconds)
+- MySQL database with proper configuration
+
+To get started quickly:
+```bash
+make install  # Creates .env file
+# Edit .env with your Eve Online application settings
+make up       # Start all services
+```
+
 ## Requirements
 
 The core of this framework requires the following:
