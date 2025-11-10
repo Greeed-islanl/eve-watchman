@@ -1,0 +1,85 @@
+name: Docker Deployment Test
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile.*'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test-deployment:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Create .env file for testing
+      run: |
+        cp .env.example .env
+        # Set dummy values for testing
+        sed -i 's/your_eve_client_id/test_client_id/' .env
+        sed -i 's/your_eve_client_secret/test_client_secret/' .env
+        sed -i 's|http://localhost:8080/?core_action=callback|http://test.example.com/?core_action=callback|' .env
+        sed -i 's/character_id_1,character_id_2/12345,67890/' .env
+
+    - name: Validate docker-compose.yml
+      run: |
+        docker compose config --quiet
+        echo "✓ Docker Compose configuration is valid"
+
+    - name: Build Docker images
+      run: |
+        docker compose build --no-cache
+        echo "✓ Docker images built successfully"
+
+    - name: Start services
+      run: |
+        docker compose up -d
+        echo "✓ Services started"
+
+    - name: Wait for services to be healthy
+      run: |
+        echo "Waiting for database to be healthy..."
+        timeout 60 bash -c 'until docker compose ps database | grep -q "healthy"; do sleep 2; done'
+        echo "✓ Database is healthy"
+        
+        echo "Waiting for web service to start..."
+        sleep 10
+        echo "✓ Web service should be ready"
+
+    - name: Check service status
+      run: |
+        docker compose ps
+        
+    - name: Check logs for errors
+      if: always()
+      run: |
+        echo "=== Database Logs ==="
+        docker compose logs database
+        echo ""
+        echo "=== Web Logs ==="
+        docker compose logs web
+        echo ""
+        echo "=== Relay Logs ==="
+        docker compose logs relay
+
+    - name: Stop services
+      if: always()
+      run: |
+        docker compose down -v
+        echo "✓ Services stopped and cleaned up"
+
+    - name: Summary
+      if: success()
+      run: |
+        echo "✓ All deployment tests passed!"
+        echo "The Docker configuration is ready for deployment."

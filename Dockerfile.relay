@@ -1,0 +1,31 @@
+# Python Relay Dockerfile for Eve Watchman
+FROM python:3.11-slim
+
+# Update pip and install required Python packages
+# Using trusted-host flags to handle SSL issues in restricted environments
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+    requests \
+    PyYAML \
+    mysql-connector-python
+
+# Set working directory
+WORKDIR /app
+
+# Copy Python scripts
+COPY scripts/Python /app/scripts/Python
+COPY config /app/config
+
+# Set Python path
+ENV PYTHONPATH=/app/scripts/Python
+
+# Create a simple entrypoint script for the relay
+RUN echo '#!/bin/bash\n\
+while true; do\n\
+    python3 /app/scripts/Python/run.py\n\
+    sleep 60\n\
+done' > /app/relay-loop.sh \
+    && chmod +x /app/relay-loop.sh
+
+# Run the relay script in a loop (every 60 seconds as recommended)
+CMD ["/app/relay-loop.sh"]

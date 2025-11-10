@@ -1,0 +1,29 @@
+# Docker ignore file for Eve Watchman
+.git
+.gitignore
+.env
+*.md
+LICENSE
+VERSIONING
+
+# Development files
+.vscode
+.idea
+*.log
+
+# Build artifacts
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Config files (will be mounted as volumes)
+config/config.ini
+
+# Test files
+src/tests/
+scripts/Python/tests/
