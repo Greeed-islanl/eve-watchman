@@ -1,8 +1,10 @@
 # Python Relay Dockerfile for Eve Watchman
 FROM python:3.11-slim
 
-# Install required Python packages
-RUN pip install --no-cache-dir \
+# Update pip and install required Python packages
+# Using trusted-host flags to handle SSL issues in restricted environments
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org \
     requests \
     PyYAML \
     mysql-connector-python
